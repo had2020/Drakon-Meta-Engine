@@ -1,0 +1,7 @@
+[package]
+name = "cpu-accelerated"
+version = "0.0.1"
+edition = "2024"
+
+[dependencies]
+drakon-opcodes = { path = "../drakon-opcodes"}
