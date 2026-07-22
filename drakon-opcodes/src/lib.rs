@@ -1,3 +1,5 @@
+use std::mem::transmute;
+
 // [4bits OPCODE][2bits DIST_REG][2bits REG]
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -37,7 +39,7 @@ impl Instruction {
             | (self.reg & Self::REG_MASK)
     }
 
-    pub const fn unpack(packed: u8) -> Self {
+    pub const fn unpack_to_readable(packed: u8) -> Self {
         let op = unsafe { std::mem::transmute(packed >> 4) };
         Self {
             op,
@@ -47,48 +49,25 @@ impl Instruction {
     }
 
     /// Pack 4 instructions into a u32 (Little-Endian layout)
-    pub fn pack_u32(insts: [Instruction; 4]) -> u32 {
+    pub fn pack_readable_u32(insts: [Instruction; 4]) -> u32 {
         (insts[0].pack() as u32)
             | ((insts[1].pack() as u32) << 8)
             | ((insts[2].pack() as u32) << 16)
             | ((insts[3].pack() as u32) << 24)
     }
 
+    pub fn pack_bytes_u32(insts: [u8; 4]) -> u32 {
+        unsafe { transmute(insts) }
+    }
+
     /// Unpack a u32 into 4 instructions (SWAR parsing)
-    pub fn unpack_u32(packed: u32) -> [Instruction; 4] {
+    pub fn unpack_u32_to_bytes(packed: u32) -> [Instruction; 4] {
         let bytes = packed.to_le_bytes();
         [
-            Instruction::unpack(bytes[0]),
-            Instruction::unpack(bytes[1]),
-            Instruction::unpack(bytes[2]),
-            Instruction::unpack(bytes[3]),
-        ]
-    }
-
-    /// Pack 8 instructions into a u64
-    pub fn pack_u64(insts: [Instruction; 8]) -> u64 {
-        (insts[0].pack() as u64)
-            | ((insts[1].pack() as u64) << 8)
-            | ((insts[2].pack() as u64) << 16)
-            | ((insts[3].pack() as u64) << 24)
-            | ((insts[4].pack() as u64) << 32)
-            | ((insts[5].pack() as u64) << 40)
-            | ((insts[6].pack() as u64) << 48)
-            | ((insts[7].pack() as u64) << 56)
-    }
-
-    /// Unpack a u64 into 8 instructions
-    pub fn unpack_u64(packed: u64) -> [Instruction; 8] {
-        let bytes = packed.to_le_bytes();
-        [
-            Instruction::unpack(bytes[0]),
-            Instruction::unpack(bytes[1]),
-            Instruction::unpack(bytes[2]),
-            Instruction::unpack(bytes[3]),
-            Instruction::unpack(bytes[4]),
-            Instruction::unpack(bytes[5]),
-            Instruction::unpack(bytes[6]),
-            Instruction::unpack(bytes[7]),
+            Instruction::unpack_to_readable(bytes[0]),
+            Instruction::unpack_to_readable(bytes[1]),
+            Instruction::unpack_to_readable(bytes[2]),
+            Instruction::unpack_to_readable(bytes[3]),
         ]
     }
 }
