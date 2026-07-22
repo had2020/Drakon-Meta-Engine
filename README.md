@@ -1,7 +1,5 @@
 # TODO rest of README...
 
-This is from template for my projects.
-
 #### License
 
 <sup>
