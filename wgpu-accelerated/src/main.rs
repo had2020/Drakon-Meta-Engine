@@ -1,6 +1,8 @@
 use std::{num::NonZeroU64, str::FromStr};
 use wgpu::util::DeviceExt;
 
+pub enum CoreOpcodes {}
+
 fn main() {
     let arguments: Vec<f32> = std::env::args()
         .skip(1)
@@ -43,8 +45,6 @@ fn main() {
         trace: wgpu::Trace::Off,
     }))
     .expect("Failed to create device");
-
-    pub enum Opcode {}
 
     let module = device.create_shader_module(wgpu::include_wgsl!("shader.wgsl"));
 
