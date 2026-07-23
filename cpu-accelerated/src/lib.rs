@@ -1,5 +1,3 @@
-use drakon_opcodes::*;
-
 /// Cache lane 64 byte aligned layout:
 #[repr(C, align(64))]
 pub struct OpcodeLane {
@@ -15,6 +13,14 @@ pub fn tick_lane(lane: &OpcodeLane, register_preload_input: &[u32; 4]) -> [[u32;
     for i in 0..8 {
         for j in 0..8 {
             let instruction = lane.vm_genes[i][j];
+            let opcode = instruction >> 4;
+            let dist_reg = (instruction & 0xF0) >> 2;
+            let reg = instruction & 0xFC;
+
+            match opcode {
+                //TODO: use opcode enum repr to make sure compiler dispatches.
+                0 => {}
+            }
         }
     }
 
