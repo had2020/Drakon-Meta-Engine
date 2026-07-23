@@ -1,4 +1,8 @@
-use std::mem::transmute;
+use std::{
+    mem::MaybeUninit,
+    mem::transmute,
+    ops::{Shl, Shr},
+};
 
 use drakon_opcodes::*;
 
@@ -13,8 +17,8 @@ static DISPATCH_TABLE: [OpHandler; 16] = [
     |a, b| a | b,                      // OR
     |a, _| !a,                         // NOT
     |a, b| a ^ b,                      // XOR
-    |a, b| a >> b,                     // SHR
-    |a, b| a << b,                     // SHL
+    |a, b| a.shr(b),                   // SHR
+    |a, b| a.shl(b),                   // SHL
     |a, b| a.rotate_right(b),          // ROR
     |a, b| a.rotate_left(b),           // ROL
     |a, b| a.wrapping_add(b),          // ADD
@@ -52,4 +56,60 @@ pub fn tick_lane(lane: &OpcodeLane, register_preload_input: &[u32; 4]) -> [[u32;
     }
 
     vm_regs_bank
+}
+
+#[repr(align(64))]
+pub struct DnaAndOutBuffers<const VMS: usize> {
+    pub vms_genomes: [MaybeUninit<[u8; 8]>; VMS],
+    pub outputs: [MaybeUninit<[u32; 4]>; VMS],
+}
+
+impl<const VMS: usize> DnaAndOutBuffers<VMS> {
+    pub const fn new() -> Self {
+        assert!(VMS.is_multiple_of(4), "VMS must be a multiple of 4!");
+        Self {
+            vms_genomes: [const { MaybeUninit::uninit() }; VMS],
+            outputs: [const { MaybeUninit::uninit() }; VMS],
+        }
+    }
+}
+
+pub fn get_cycles_entropy() -> u64 {
+    let cycles: u64;
+    unsafe {
+        #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+        {
+            use std::arch::x86_64::_rdtsc;
+            cycles = _rdtsc();
+        }
+
+        #[cfg(target_arch = "aarch64")]
+        {
+            core::arch::asm!("mrs {}, cntvct_el0", out(reg) cycles);
+        }
+
+        #[cfg(target_arch = "riscv64")]
+        {
+            core::arch::asm!("rdcycle {}", out(reg) cycles);
+        }
+
+        #[cfg(not(any(
+            target_arch = "x86",
+            target_arch = "x86_64",
+            target_arch = "aarch64",
+            target_arch = "riscv64"
+        )))]
+        {
+            cycles = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos() as u64;
+        }
+    }
+    cycles
+}
+
+pub fn get_os_entropy() -> u64 {
+    let stack_var = 0u8;
+    &stack_var as *const u8 as u64
 }
