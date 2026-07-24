@@ -58,6 +58,20 @@ pub fn tick_lane(lane: &OpcodeLane, register_preload_input: &[u32; 4]) -> [[u32;
     vm_regs_bank
 }
 
+/* TODO: parsing opcodes onto rust.
+#[repr(C, align(64))]
+pub struct FittestProgram {
+    instructions: [u8; 8],
+}
+
+impl FittestProgram {
+    pub fn out_rustc(self) -> String {
+        let mut r: String = format!(r#"let mut regs = [0_32; 4]; \n fn main() { regs["#, "{}", self.instructions r#"]"#);
+
+        r
+    }
+}*/
+
 #[repr(align(64))]
 pub struct DnaAndOutBuffers<const VMS: usize> {
     pub vms_genomes: [MaybeUninit<[u8; 8]>; VMS],
