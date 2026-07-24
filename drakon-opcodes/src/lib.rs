@@ -1,5 +1,3 @@
-use std::mem::transmute;
-
 // [4bits OPCODE][2bits DIST_REG][2bits REG]
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -30,6 +28,10 @@ pub struct Instruction {
 }
 
 impl Instruction {
+    pub fn extract_opcode(byte: u8) -> DrakonOpBase {
+        unsafe { std::mem::transmute(byte >> 4) }
+    }
+
     const REG_MASK: u8 = 0b0000_0011;
     const DIST_REG_MASK: u8 = 0b0000_1100;
 
@@ -57,7 +59,7 @@ impl Instruction {
     }
 
     pub fn pack_bytes_u32(insts: [u8; 4]) -> u32 {
-        unsafe { transmute(insts) }
+        u32::from_ne_bytes(insts)
     }
 
     /// Unpack a u32 into 4 instructions (SWAR parsing)

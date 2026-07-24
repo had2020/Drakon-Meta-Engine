@@ -3,17 +3,12 @@
 version = 4
 
 [[package]]
-name = "cpu-accelerated"
-version = "0.0.1"
-dependencies = [
- "drakon-opcodes",
- "fitness-parameters",
-]
-
-[[package]]
 name = "drakon-opcodes"
 version = "0.0.1"
 
 [[package]]
-name = "fitness-parameters"
+name = "transpiler"
 version = "0.1.0"
+dependencies = [
+ "drakon-opcodes",
+]

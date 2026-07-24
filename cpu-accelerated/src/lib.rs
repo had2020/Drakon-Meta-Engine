@@ -1,10 +1,10 @@
+use drakon_opcodes::DrakonOpBase;
+use fitness_parameters::{MAX_SEARCH_SPACE, TrainingDataset};
 use std::{
     mem::MaybeUninit,
     mem::transmute,
     ops::{Shl, Shr},
 };
-
-use drakon_opcodes::*;
 
 type OpHandler = fn(u32, u32) -> u32;
 
@@ -57,20 +57,6 @@ pub fn tick_lane(lane: &OpcodeLane, register_preload_input: &[u32; 4]) -> [[u32;
 
     vm_regs_bank
 }
-
-/* TODO: parsing opcodes onto rust.
-#[repr(C, align(64))]
-pub struct FittestProgram {
-    instructions: [u8; 8],
-}
-
-impl FittestProgram {
-    pub fn out_rustc(self) -> String {
-        let mut r: String = format!(r#"let mut regs = [0_32; 4]; \n fn main() { regs["#, "{}", self.instructions r#"]"#);
-
-        r
-    }
-}*/
 
 #[repr(align(64))]
 pub struct DnaAndOutBuffers<const VMS: usize> {
@@ -126,4 +112,11 @@ pub fn get_cycles_entropy() -> u64 {
 pub fn get_os_entropy() -> u64 {
     let stack_var = 0u8;
     &stack_var as *const u8 as u64
+}
+
+pub fn full_raw_search<const TEST_SETS: usize>(dataset: TrainingDataset<TEST_SETS>) -> [u8; 8] {
+    let mut r = [0_u8; 8];
+    let mut opcode_lanes: [OpcodeLane; TEST_SETS];
+
+    for i in 0..MAX_SEARCH_SPACE {}
 }

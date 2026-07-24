@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 drakon-opcodes = { path = "../drakon-opcodes"}
+fitness-parameters = { path = "../fitness-parameters"}
