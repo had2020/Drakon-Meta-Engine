@@ -4,8 +4,8 @@ pub const MAX_SEARCH_SPACE: u32 = 16_777_216;
 #[repr(u32)]
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum IgnoreMask {
-    Ignored = u32::MAX,
-    Checked = 0,
+    Ignored = 0,
+    Checked = u32::MAX,
 }
 
 /// Structure of Arrays (SoA) layout aligned to 64-byte cache lines
@@ -51,7 +51,34 @@ impl<const TEST_SETS: usize> Default for TrainingDataset<TEST_SETS> {
 }
 
 impl<const TEST_SETS: usize> TrainingDataset<TEST_SETS> {
-    #[inline(always)]
+    pub fn to_bytes(self) -> Vec<u32> {
+        let mut r: Vec<u32> = Vec::with_capacity((TEST_SETS * 12) + 1);
+
+        r.push(TEST_SETS as u32);
+        r.extend_from_slice(&self.reg0_inputs);
+        r.extend_from_slice(&self.reg1_inputs);
+        r.extend_from_slice(&self.reg2_inputs);
+        r.extend_from_slice(&self.reg3_inputs);
+        r.extend_from_slice(&self.reg0_expected);
+        r.extend_from_slice(&self.reg1_expected);
+        r.extend_from_slice(&self.reg2_expected);
+        r.extend_from_slice(&self.reg3_expected);
+        r.extend_from_slice(unsafe {
+            std::slice::from_raw_parts(self.reg0_ignore.as_ptr() as *const u32, TEST_SETS)
+        });
+        r.extend_from_slice(unsafe {
+            std::slice::from_raw_parts(self.reg1_ignore.as_ptr() as *const u32, TEST_SETS)
+        });
+        r.extend_from_slice(unsafe {
+            std::slice::from_raw_parts(self.reg2_ignore.as_ptr() as *const u32, TEST_SETS)
+        });
+        r.extend_from_slice(unsafe {
+            std::slice::from_raw_parts(self.reg3_ignore.as_ptr() as *const u32, TEST_SETS)
+        });
+
+        r
+    }
+
     pub fn new() -> Self {
         Self::default()
     }
