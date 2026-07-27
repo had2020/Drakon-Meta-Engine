@@ -51,32 +51,47 @@ impl<const TEST_SETS: usize> Default for TrainingDataset<TEST_SETS> {
 }
 
 impl<const TEST_SETS: usize> TrainingDataset<TEST_SETS> {
-    pub fn to_bytes(self) -> Vec<u32> {
-        let mut r: Vec<u32> = Vec::with_capacity((TEST_SETS * 12) + 1);
+    pub fn to_bytes_form(&self) -> Vec<u8> {
+        let num_u32s = (TEST_SETS * 12) + 1;
+        let byte_capacity = num_u32s * std::mem::size_of::<u32>();
 
-        r.push(TEST_SETS as u32);
-        r.extend_from_slice(&self.reg0_inputs);
-        r.extend_from_slice(&self.reg1_inputs);
-        r.extend_from_slice(&self.reg2_inputs);
-        r.extend_from_slice(&self.reg3_inputs);
-        r.extend_from_slice(&self.reg0_expected);
-        r.extend_from_slice(&self.reg1_expected);
-        r.extend_from_slice(&self.reg2_expected);
-        r.extend_from_slice(&self.reg3_expected);
-        r.extend_from_slice(unsafe {
+        let mut r_bytes: Vec<u8> = Vec::with_capacity(byte_capacity);
+
+        r_bytes.extend_from_slice(&(TEST_SETS as u32).to_ne_bytes());
+
+        let extend_u32_slice = |vec: &mut Vec<u8>, slice: &[u32]| {
+            let raw_bytes = unsafe {
+                std::slice::from_raw_parts(
+                    slice.as_ptr() as *const u8,
+                    slice.len() * std::mem::size_of::<u32>(),
+                )
+            };
+            vec.extend_from_slice(raw_bytes);
+        };
+
+        extend_u32_slice(&mut r_bytes, &self.reg0_inputs);
+        extend_u32_slice(&mut r_bytes, &self.reg1_inputs);
+        extend_u32_slice(&mut r_bytes, &self.reg2_inputs);
+        extend_u32_slice(&mut r_bytes, &self.reg3_inputs);
+        extend_u32_slice(&mut r_bytes, &self.reg0_expected);
+        extend_u32_slice(&mut r_bytes, &self.reg1_expected);
+        extend_u32_slice(&mut r_bytes, &self.reg2_expected);
+        extend_u32_slice(&mut r_bytes, &self.reg3_expected);
+
+        extend_u32_slice(&mut r_bytes, unsafe {
             std::slice::from_raw_parts(self.reg0_ignore.as_ptr() as *const u32, TEST_SETS)
         });
-        r.extend_from_slice(unsafe {
+        extend_u32_slice(&mut r_bytes, unsafe {
             std::slice::from_raw_parts(self.reg1_ignore.as_ptr() as *const u32, TEST_SETS)
         });
-        r.extend_from_slice(unsafe {
+        extend_u32_slice(&mut r_bytes, unsafe {
             std::slice::from_raw_parts(self.reg2_ignore.as_ptr() as *const u32, TEST_SETS)
         });
-        r.extend_from_slice(unsafe {
+        extend_u32_slice(&mut r_bytes, unsafe {
             std::slice::from_raw_parts(self.reg3_ignore.as_ptr() as *const u32, TEST_SETS)
         });
 
-        r
+        r_bytes
     }
 
     pub fn new() -> Self {
