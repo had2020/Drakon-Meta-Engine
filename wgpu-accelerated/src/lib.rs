@@ -155,5 +155,39 @@ pub fn gpu_raw_search<const TEST_SETS: usize>(
     compute_pass.set_pipeline(&pipeline);
     compute_pass.set_bind_group(0, &bind_group, &[]);
 
-    [0_u8; 8] // <- TODO:
+    let workgroup_count: usize = 65_536;
+
+    compute_pass.dispatch_workgroups(workgroup_count as u32, 1, 1);
+
+    drop(compute_pass);
+
+    encoder.copy_buffer_to_buffer(
+        &output_data_buffer,
+        0,
+        &download_buffer,
+        0,
+        output_data_buffer.size(),
+    );
+
+    let command_buffer = encoder.finish();
+
+    wgpu_wrapper.queue.submit([command_buffer]);
+
+    let buffer_slice = download_buffer.slice(..);
+    buffer_slice.map_async(wgpu::MapMode::Read, |_| {});
+
+    wgpu_wrapper
+        .device
+        .poll(wgpu::PollType::wait_indefinitely())
+        .unwrap();
+
+    let data = buffer_slice.get_mapped_range().unwrap();
+
+    let result: Vec<u8> = bytemuck::allocation::pod_collect_to_vec(&data);
+
+    let program: [u8; 8] = [
+        result[0], result[1], result[2], result[3], result[4], result[5], result[6], result[7],
+    ];
+
+    program // <- TODO:
 }
