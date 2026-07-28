@@ -1,0 +1,8 @@
+[package]
+name = "raw_gpu_search"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+wgpu-accelerated = { path = "../../wgpu-accelerated"}
+fitness-parameters = { path =  "../../fitness-parameters"}

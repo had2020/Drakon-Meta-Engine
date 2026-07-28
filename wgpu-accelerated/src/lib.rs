@@ -1,6 +1,6 @@
 use drakon_opcodes::*;
 use fitness_parameters::*;
-use std::{num::NonZeroU64, str::FromStr};
+use std::num::NonZeroU64;
 use wgpu::util::DeviceExt;
 
 pub struct WgpuWrapper {
@@ -10,7 +10,7 @@ pub struct WgpuWrapper {
 }
 
 impl WgpuWrapper {
-    pub fn init(self) -> Self {
+    pub fn init() -> Self {
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
 
         let adapter =
@@ -47,7 +47,7 @@ impl WgpuWrapper {
 
 pub fn gpu_raw_search<const TEST_SETS: usize>(
     wgpu_wrapper: &WgpuWrapper,
-    training_dataset: &TrainingDataset<TEST_SETS>,
+    training_dataset: &Requirements<TEST_SETS>,
 ) -> [u8; 8] {
     let dataset_bytes = training_dataset.to_bytes_form();
 
@@ -155,7 +155,7 @@ pub fn gpu_raw_search<const TEST_SETS: usize>(
     compute_pass.set_pipeline(&pipeline);
     compute_pass.set_bind_group(0, &bind_group, &[]);
 
-    let workgroup_count: usize = 65_536;
+    let workgroup_count: usize = 65535;
 
     compute_pass.dispatch_workgroups(workgroup_count as u32, 1, 1);
 

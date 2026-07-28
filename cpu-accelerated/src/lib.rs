@@ -1,5 +1,5 @@
 use drakon_opcodes::DrakonOpBase;
-use fitness_parameters::{MAX_SEARCH_SPACE, TrainingDataset};
+use fitness_parameters::{MAX_SEARCH_SPACE, Requirements};
 use std::{
     mem::MaybeUninit,
     mem::transmute,

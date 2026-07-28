@@ -11,7 +11,7 @@ pub enum IgnoreMask {
 /// Structure of Arrays (SoA) layout aligned to 64-byte cache lines
 /// to ensure contiguous, prefetcher-friendly linear access patterns.
 #[repr(align(64))]
-pub struct TrainingDataset<const TEST_SETS: usize> {
+pub struct Requirements<const TEST_SETS: usize> {
     pub reg0_inputs: [u32; TEST_SETS],
     pub reg1_inputs: [u32; TEST_SETS],
     pub reg2_inputs: [u32; TEST_SETS],
@@ -28,7 +28,7 @@ pub struct TrainingDataset<const TEST_SETS: usize> {
     pub reg3_ignore: [IgnoreMask; TEST_SETS],
 }
 
-impl<const TEST_SETS: usize> Default for TrainingDataset<TEST_SETS> {
+impl<const TEST_SETS: usize> Default for Requirements<TEST_SETS> {
     #[inline(always)]
     fn default() -> Self {
         Self {
@@ -50,7 +50,7 @@ impl<const TEST_SETS: usize> Default for TrainingDataset<TEST_SETS> {
     }
 }
 
-impl<const TEST_SETS: usize> TrainingDataset<TEST_SETS> {
+impl<const TEST_SETS: usize> Requirements<TEST_SETS> {
     pub fn to_bytes_form(&self) -> Vec<u8> {
         let num_u32s = (TEST_SETS * 12) + 1;
         let byte_capacity = num_u32s * std::mem::size_of::<u32>();
