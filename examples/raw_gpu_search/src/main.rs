@@ -22,5 +22,7 @@ fn main() {
 
     let resulting_program = gpu_raw_search(&wgpu_wrapper, &requirements);
 
-    println!("{:?}", resulting_program);
+    let debug: u64 = u64::from_ne_bytes(resulting_program);
+
+    println!("{:?}", debug);
 }
