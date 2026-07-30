@@ -155,9 +155,12 @@ pub fn gpu_raw_search<const TEST_SETS: usize>(
     compute_pass.set_pipeline(&pipeline);
     compute_pass.set_bind_group(0, &bind_group, &[]);
 
-    let workgroup_count: usize = 65535;
+    //let workgroup_count: usize = 65535;
+    //compute_pass.dispatch_workgroups(workgroup_count as u32, 1, 1);
 
-    compute_pass.dispatch_workgroups(workgroup_count as u32, 1, 1);
+    // Each workgroup will take the max of 65536 invocations,
+    // this leaves a range of 256 required attempts, for the search space of 8^8.
+    compute_pass.dispatch_workgroups(256, 256, 1);
 
     drop(compute_pass);
 

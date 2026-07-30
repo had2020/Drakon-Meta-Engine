@@ -11,50 +11,67 @@ struct ExecutionContext {
     regs: vec4<u32>,
 };
 
-fn execute_instruction(op: u32, dest_val: u32, src_val: u32) -> u32 {
-    // mask shift amounts to 5 bits (0-31) to keep ISA stability on GPU vector ALUs
+/*
+fn execute_instruction(opcode: u32, dest_val: u32, src_val: u32) -> u32 {
     let shift_amt = src_val & 31u;
 
-    switch op {
-        case 0u: { return select(dest_val, src_val, dest_val != 0u); } // CMOV: If dest != 0 then src else dest
-        case 1u: { return min(dest_val, src_val); }                   // MIN
-        case 2u: { return dest_val + src_val; }                       // IMM (a + b as defined)
-        case 3u: { return src_val; }                                  // MOV
-        case 4u: { return dest_val & src_val; }                       // AND
-        case 5u: { return dest_val | src_val; }                       // OR
-        case 6u: { return ~dest_val; }                                // NOT
-        case 7u: { return dest_val ^ src_val; }                       // XOR
-        case 8u: { return dest_val >> shift_amt; }                    // SHR
-        case 9u: { return dest_val << shift_amt; }                    // SHL
-        case 10u: { return reverseBits(reverseBits(dest_val) << shift_amt) | (dest_val >> (32u - shift_amt)); } // ROR fallback / use insertBits
-        case 11u: { return (dest_val << shift_amt) | (dest_val >> ((32u - shift_amt) & 31u)); }                  // ROL
-        case 12u: { return dest_val + src_val; }                       // ADD (wrapping is default in WGSL)
-        case 13u: { return dest_val - src_val; }                       // SUB
-        case 14u: { return max(dest_val, src_val); }                   // MAX
-        case 15u: { return countOneBits(src_val); }                    // POPCNT
-        default: { return dest_val; }
-    }
-}
+    // Standard rotate implementations to avoid complex bit reverse overhead
+    let ror_val = (dest_val >> shift_amt) | (dest_val << ((32u - shift_amt) & 31u));
+    let rol_val = (dest_val << shift_amt) | (dest_val >> ((32u - shift_amt) & 31u));
+
+    // Pre-calculate all 16 opcode results
+    // The GPU compiler will map this into uniform, non-divergent vector instructions
+    var results = array<u32, 16>(
+        select(dest_val, src_val, dest_val != 0u),                      // 0: CMOV
+        min(dest_val, src_val),                                         // 1: MIN
+        dest_val + src_val,                                             // 2: IMM
+        src_val,                                                        // 3: MOV
+        dest_val & src_val,                                             // 4: AND
+        dest_val | src_val,                                             // 5: OR
+        ~dest_val,                                                      // 6: NOT
+        dest_val ^ src_val,                                             // 7: XOR
+        dest_val >> shift_amt,                                          // 8: SHR
+        dest_val << shift_amt,                                          // 9: SHL
+        ror_val,                                                        // 10: ROR
+        rol_val,                                                        // 11: ROL
+        dest_val + src_val,                                             // 12: ADD
+        dest_val - src_val,                                             // 13: SUB
+        max(dest_val, src_val),                                         // 14: MAX
+        countOneBits(src_val)                                           // 15: POPCNT
+    );
+
+    // Dynamic indexing of small stack arrays maps directly to registers 
+    // or constant-time register indexing instructions (e.g., v_movreld_b32 on AMD)
+    return results[opcode & 15u];
+}*/
 
 fn bitmixer(counter: u32) -> u32 {
-    var x: u32 = counter * 0x9e3779b9u;
-    x ^= x >> 16u;
-    x *= 0x85ebca6bu;
-    x ^= x >> 13u;
-    x *= 0xc2b2ae35u;
-    x ^= x >> 16u;
+    var x: u32 = counter * 0x9e3779b9;
+    x ^= x >> 16;
+    x *= 0x85ebca6b;
+    x ^= x >> 13;
+    x *= 0xc2b2ae35;
+    x ^= x >> 16;
     return x;
 }
+
+const TOTAL_SEARCH_SPACE: u32 = 16777216; // 8^8
 
 @group(0) @binding(0)
 var<storage, read> input: array<u32>;
 @group(0) @binding(1)
 var<storage, read_write> output: array<u32>;
 
-@compute @workgroup_size(64)
+// Each workgroup will take the max of 65536 invocations,
+// this leaves a range of 256 required attempts per workgroup, for the search space of 8^8.
+@compute @workgroup_size(256)
 fn MetaDrakon(@builtin(global_invocation_id) global_id: vec3<u32>) {
-    let vm_id = (global_id.x + global_id.y + global_id.z);
+    let vm_id = global_id.x * 256;
+    let range_end = vm_id + 256;
     let registers = vec4<u32>(input[0], input[1], input[2], input[3]);
+
+    for (var i = vm_id; i < range_end; i++) {
+    }
 
     /*
   let index = global_id.x;
@@ -66,6 +83,5 @@ fn MetaDrakon(@builtin(global_invocation_id) global_id: vec3<u32>) {
 
   output[global_id.x] = input[global_id.x] * 2;
   */
-    //output[global_id.x] = input[global_id.x];
-    //output[global_id.x] = arrayLength(&input);
+    output[global_id.x] = vm_id;
 }
