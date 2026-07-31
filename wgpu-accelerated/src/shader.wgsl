@@ -70,17 +70,23 @@ fn MetaDrakon(@builtin(global_invocation_id) global_id: vec3<u32>) {
     let range_end = vm_id + 256;
     let registers = vec4<u32>(input[0], input[1], input[2], input[3]);
 
-    for (var i = vm_id; i < (range_end / 8); i++) {
+    for (var i = vm_id; i < range_end; i++) {
         let op0: u32 = i >> 28;
-        let op1: u32 = (i + 1) >> 28;
-        let op2: u32 = (i + 2) >> 28;
-        let op3: u32 = (i + 3) >> 28;
-        let op4: u32 = (i + 4) >> 28;
-        let op5: u32 = (i + 5) >> 28;
-        let op6: u32 = (i + 6) >> 28;
-        let op7: u32 = (i + 7) >> 28;
+        let dist_reg0: u32 = (i & 0xC000000) >> 26;
+        let reg_arg0: u32 = (i & 0x3000000) >> 24;
 
-        let reg: u32 = }
+        let op1: u32 = (i & 0xF00000) >> 20;
+        let dist_reg1: u32 = (i & 0xC0000) >> 18;
+        let reg_arg1: u32 = (i & 0x30000) >> 16;
+
+        let op2: u32 = (i & 0xF000) >> 12;
+        let dist_reg2: u32 = (i & 0xC00) >> 10;
+        let reg_arg2: u32 = (i & 0x300) >> 8;
+
+        let op3: u32 = (i & 0xF0) >> 4;
+        let dist_reg3: u32 = (i & 0xC) >> 2;
+        let reg_arg3: u32 = i & 0x3;
+    }
 
     /*
   let index = global_id.x;
